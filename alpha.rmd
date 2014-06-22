@@ -1,0 +1,66 @@
+Regression Models Project
+========================================================
+Executive summary.
+--------------------------------------------------------
+Motor Trend, a magazine about the automobile industry is looking at a data set of a collection of cars, they are interested in exploring the relationship between a set of variables and miles per gallon (MPG) 
+(outcome). They are particularly interested in the following two questions:
+
+* “Is an automatic or manual transmission better for MPG”
+* “Quantifying how different is the MPG between automatic and manual transmissions?”
+
+In oreder to answer the questions, I built a linear regression models and did the analysis. My final conclusion is included in the __Final Conclusion__ section. I disscussed more in the __More section__.
+
+Methodologies
+-------------------------------------------------------
+For the obvious reason, we need to build a regression model here. But let's explore on data first.
+```{r}
+data(mtcars) # prepare the data first
+for (i in c(2, 8, 9, 10, 11)) {
+  mtcars[,i] <- as.factor(mtcars[, i])
+}
+str(mtcars)
+boxplot(data = mtcars, mpg ~ am, ylab = 'MPG', col = c('blue', 'orange'))
+```
+
+Only by examing the box plot, it is clear that the MPG of an automatic transmission is __higher__ than a manual transmission. But is this the answer? No.
+
+Models
+---------------------------------------------------------
+Let's start by building some models.
+```{r}
+with(mtcars,plot(y = mpg,x = wt, col = am, cex =2))
+mod2 <- lm(data = mtcars, mpg ~ wt + am) # new model with two vars.
+summary(mod2)
+new2 <- data.frame(wt = c(2.62, 2.62), am = as.factor(c(1,0)) )
+(pre2 <- predict(mod2, new = new2))
+```
+
+From plot above,clearly, weight is coreleated with am. So there may be confounding variables in our data set and We have to find a way find and remove them. The most easiest way is to do a __variable selection__ with the step() function.
+
+```{r,fig.height=3,fig.width=4,out.width=4, out.height=3 }
+mod3 <- step(lm(data = mtcars, mpg ~ .), trace = 0) # the backward selection
+summary(mod3)
+new3 <- data.frame(wt = c(2.62, 2.62), hp = c(110,110), cyl  = as.factor(c(8,8)), am = as.factor(c(0,1)))
+(pre3 <- predict(mod3, new = new3))
+```
+
+Let plot some diagnostic plots to make sure our final mode is valid. Check the appendix for the figures.
+The model looks good enough to me. The residuals split quite randomly,the normality is also ensured by the QQ plot and no obvious outliners. Now we can do the final analysis via the mod3. * The p-value for am .2, far away from 0.05. This indicates that the transmission might not be a important indicator for mpg.
+* Holding the other variables in the model constant, the difference mpg between AT and MT is not that hugh.
+
+Final Conclusion
+----------------------------------------------------------------
+So now we can finally answer the two questions at the very beginning.
+
+* “Is an automatic or manual transmission better for MPG” -- No. There is no difference.
+* “Quantifying how different is the MPG between automatic and manual transmissions?” 0
+
+More ...
+-----------------------------------------------------------------
+Look back at the scatter plot of mpg, wt and am. There are clearly two clusters in the picture. So if people think the mpg of a AT car is higher, the most reasonable explanation is that somehow the average weight of AT cars is __smaller__ than the weight of MT cars. And the heavier a car is, the smaller its mpg is.
+
+Appendix
+-------------------------------------------------------------
+```{r,echo=FALSE}
+plot(mod3)
+```
